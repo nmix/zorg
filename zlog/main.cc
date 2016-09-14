@@ -5,13 +5,12 @@
 
 int main(int, char*[])
 {
-
-    ZLogger logger = ZLogger();
-    int i = 0;
-    while (i < 3) {
-        logger.log(ZLogger::Level::debug, (boost::format("Log message # %d") % i).str() );
-        i += 1;
-    }
-
+    ZLogger logger = ZLogger("foo_0.log");
+    logger.log(ZLogger::level::debug, "Debug message");
+    logger.log(ZLogger::level::info, "Info message");
+    logger.log(ZLogger::level::warning, "Warning message");
+    logger.log(ZLogger::level::error, "Error message");
+    logger.log(ZLogger::level::fatal, "Fatal message");
     return 0;
+    // logger.log(ZLogger::level::debug, (boost::format("Debug message # %d") % i).str() );
 }
