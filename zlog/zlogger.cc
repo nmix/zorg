@@ -26,8 +26,8 @@ namespace keywords = boost::log::keywords;
 namespace expr = boost::log::expressions;
 namespace attrs = boost::log::attributes;
 
-BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::severity_logger_mt< ZLogger::level >);
-BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", ZLogger::level)
+BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::severity_logger_mt< ZLogger::Level >);
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", ZLogger::Level)
 
 ZLogger::ZLogger(std::string f)
 {
@@ -49,30 +49,30 @@ ZLogger::ZLogger(std::string f)
     boost::log::add_common_attributes();
 }
 
-void ZLogger::log(ZLogger::level level, std::string message)
+void ZLogger::log(ZLogger::Level level, std::string message)
 {
-    src::severity_logger_mt< ZLogger::level >& slg = my_logger::get();
+    src::severity_logger_mt< ZLogger::Level >& slg = my_logger::get();
     BOOST_LOG_SEV(slg, level) << std::setw(9) << level_str(level) << ": " << message;
 }
 
-std::string ZLogger::level_str(ZLogger::level level)
+std::string ZLogger::level_str(ZLogger::Level level)
 {
     std::string s = "UNK";
     switch(level)
     {
-        case ZLogger::level::debug:
+        case ZLogger::Level::debug:
             s = "debug";
             break;
-        case ZLogger::level::info:
+        case ZLogger::Level::info:
             s = "info";
             break;
-        case ZLogger::level::warning:
+        case ZLogger::Level::warning:
             s = "warning";
             break;
-        case ZLogger::level::error:
+        case ZLogger::Level::error:
             s = "error";
             break;
-        case ZLogger::level::fatal:
+        case ZLogger::Level::fatal:
             s = "fatal";
             break;
     }
