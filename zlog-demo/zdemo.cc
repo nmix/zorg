@@ -1,11 +1,9 @@
 
 #include "zlogger.h"
 
-#include <boost/format.hpp>
-
 int main(int, char*[])
 {
-    ZLogger logger = ZLogger("foo_0.log");
+    ZLogger logger = ZLogger();
     logger.log(ZLogger::Level::debug, "Debug message");
     logger.log(ZLogger::Level::info, "Info message");
     logger.log(ZLogger::Level::warning, "Warning message");

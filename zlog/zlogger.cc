@@ -1,6 +1,8 @@
 #include "zlogger.h"
 
 // --- BOOST
+#define BOOST_LOG_DYN_LINK // http://stackoverflow.com/questions/18881602/boost-logger-linking-issue
+// ---
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/move/utility.hpp>
 // --- BOOST LOG
