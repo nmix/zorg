@@ -1,6 +1,6 @@
 set (PROJECT zlog)
 
-add_library (${PROJECT} SHARED zlogger.cc)
+add_library (${PROJECT} SHARED zlog.cc)
 
 target_include_directories (${PROJECT} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

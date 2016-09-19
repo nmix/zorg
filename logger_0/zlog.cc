@@ -1,4 +1,4 @@
-#include "zlogger.h"
+#include "zlog.h"
 
 // --- BOOST
 #define BOOST_LOG_DYN_LINK // http://stackoverflow.com/questions/18881602/boost-logger-linking-issue
@@ -28,10 +28,10 @@ namespace keywords = boost::log::keywords;
 namespace expr = boost::log::expressions;
 namespace attrs = boost::log::attributes;
 
-BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::severity_logger_mt< ZLogger::Level >);
-BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", ZLogger::Level)
+BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::severity_logger_mt< ZLog::Level >);
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", ZLog::Level)
 
-ZLogger::ZLogger(std::string f)
+ZLog::ZLog(std::string f)
 {
     logging::formatter formatter =
         expr::stream
@@ -51,30 +51,30 @@ ZLogger::ZLogger(std::string f)
     boost::log::add_common_attributes();
 }
 
-void ZLogger::log(ZLogger::Level level, std::string message)
+void ZLog::log(ZLog::Level level, std::string message)
 {
-    src::severity_logger_mt< ZLogger::Level >& slg = my_logger::get();
+    src::severity_logger_mt< ZLog::Level >& slg = my_logger::get();
     BOOST_LOG_SEV(slg, level) << std::setw(9) << level_str(level) << ": " << message;
 }
 
-std::string ZLogger::level_str(ZLogger::Level level)
+std::string ZLog::level_str(ZLog::Level level)
 {
     std::string s = "UNK";
     switch(level)
     {
-        case ZLogger::Level::debug:
+        case ZLog::Level::debug:
             s = "debug";
             break;
-        case ZLogger::Level::info:
+        case ZLog::Level::info:
             s = "info";
             break;
-        case ZLogger::Level::warning:
+        case ZLog::Level::warning:
             s = "warning";
             break;
-        case ZLogger::Level::error:
+        case ZLog::Level::error:
             s = "error";
             break;
-        case ZLogger::Level::fatal:
+        case ZLog::Level::fatal:
             s = "fatal";
             break;
     }
