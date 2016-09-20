@@ -14,7 +14,7 @@ void ExDaemon::init()
 
 void ExDaemon::loop()
 {
-  log((boost::format("Debug message # %d") % log_counter).str());
+  log(Logger::Level::debug, (boost::format("Debug message # %d") % log_counter).str());
   log_counter += 1;
-  sleep(1);
+  sleep(2);
 }

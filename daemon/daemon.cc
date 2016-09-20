@@ -10,89 +10,171 @@
 #include <syslog.h>
 #include <unistd.h>
 
+#include <iostream>
+#include <string>
+
+#include <boost/filesystem.hpp>
+
+#define LOG_PREFIX          "ZORG-"
+#define PIDFILE_DIRECTORY   "/tmp/zorg/"
+#define PIDFILE_EXTENSION   ".pid"
+
 Daemon::Daemon(int address)
 {
-  addr = address;
-  started = false;
-  logger = new Logger("ZORG");
+	addr = address;
+	started = false;
+	std::string sname = LOG_PREFIX + std::to_string(addr) + " ";
+	logger = new Logger(sname);
+	pidfile_path = PIDFILE_DIRECTORY + std::to_string(get_address()) + PIDFILE_EXTENSION;
 }
 
 int Daemon::get_address() 
 {
-  return addr;
+	return addr;
 }
 
-void Daemon::log(std::string message) 
+void Daemon::log(Logger::Level level, std::string message) 
 {
-  logger->log(Logger::Level::debug, message);
+	logger->log(level, message);
+}
+
+void Daemon::debug(std::string message)
+{
+	logger->log(Logger::Level::debug, message);
+}
+
+bool Daemon::pidfile_exists()
+{
+	if (boost::filesystem::exists(pidfile_path))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void Daemon::pidfile_create(int pid)
+{
+	if (!boost::filesystem::exists(PIDFILE_DIRECTORY))
+	{
+		boost::filesystem::create_directory(PIDFILE_DIRECTORY);
+	}
+	std::ofstream file(pidfile_path);
+	file << pid;
+	file.close();
+	if (!pidfile_exists())
+	{
+		throw DaemonException(PIDFILE_CREATION_ERROR);
+	}
+}
+
+int Daemon::pidfile_pid()
+{
+	if (!pidfile_exists())
+	{
+		throw DaemonException(PIDFILE_CREATION_ERROR);
+	}
+	std::ifstream file(pidfile_path);
+	std::string pid_s( (std::istreambuf_iterator<char>(file) ),
+                       (std::istreambuf_iterator<char>()) );
+	return stoi(pid_s);
 }
 
 void Daemon::start() 
 {
-  /* Our process ID and Session ID */
-  pid_t pid, sid;
-        
-  /* Fork off the parent process */
-  pid = fork();
-  if (pid < 0) {
-    exit(EXIT_FAILURE);
-  }
+	if (pidfile_exists())
+	{
+		throw DaemonException(PIDFILE_EXISTS);
+	}
 
-  /* If we got a good PID, then
-     we can exit the parent process. */
-  if (pid > 0) {
-          exit(EXIT_SUCCESS);
-  }
+	/* Our process ID and Session ID */
+  	pid_t pid, sid;
 
-  /* Change the file mode mask */
-  umask(0);
-              
-  /* Open any logs here */        
-              
-  /* Create a new SID for the child process */
-  sid = setsid();
-  if (sid < 0) {
-    /* Log the failure */
-    exit(EXIT_FAILURE);
-  }
-      
-  /* Change the current working directory */
-  if ((chdir("/")) < 0) {
-          /* Log the failure */
-          exit(EXIT_FAILURE);
-  }
-      
-  /* Close out the standard file descriptors */
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
-      
-  /* Daemon-specific initialization goes here */
-  
-  /* The Big Loop */
-  while (1) {
-     /* Do some task here ... */
-    loop();
-     // sleep(1); /* wait 30 seconds */
-  }
-  exit(EXIT_SUCCESS);
+	/* Fork off the parent process */
+	pid = fork();
+	if (pid < 0) 
+	{
+		throw DaemonException(FORK_ERROR);
+	}
+
+	/* If we got a good PID, then
+	 we can exit the parent process. */
+	if (pid > 0) 
+	{
+		// --- create pidfile
+		pidfile_create(pid);
+		return;
+	}
+
+	/* Change the file mode mask */
+	umask(0);
+
+	/* Create a new SID for the child process */
+	sid = setsid();
+	if (sid < 0) {
+		throw DaemonException(SETSID_ERROR);
+	}
+
+	/* Change the current working directory */
+	if ((chdir("/")) < 0) {
+		throw DaemonException(CHDIR_ERROR);
+	}
+
+	/* Close out the standard file descriptors */
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+
+
+	/* The Big Loop */
+	log(Logger::Level::info, "Daemon started");
+	init();
+	while (1) {
+		loop();
+	}
 }
 
 void Daemon::stop()
 {
-
+	if (!pidfile_exists()) 
+	{
+		throw DaemonException(PIDFILE_NOT_EXISTS);
+	}
+	int pid = pidfile_pid();
+	// ---
+	int kill_counter = 3;
+	bool killed = false;
+	while ((kill(pid, 0) == 0) && (kill_counter != 0))
+	{
+		std::cout << "Try to kill [" << kill_counter << "] " << pid << std::endl;
+		kill(pid, SIGTERM);
+		kill_counter -= 1;
+		sleep(1);
+	}
+	// ---
 }
 
 void Daemon::restart()
 {
-  if (started) 
-  {
-    stop();
-  }
-  start();
+	stop();
+	start();
 }
 
 void Daemon::status()
 {
 
+}
+
+void Daemon::exec(std::string cmd)
+{
+	if (cmd == "start")
+	{
+		start();
+	}
+	else if (cmd == "stop")
+	{
+		stop();
+	}
 }
