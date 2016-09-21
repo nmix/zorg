@@ -25,6 +25,9 @@ std::string DaemonException::err_str(int code)
 	case PIDFILE_EXISTS:
 		msg = "The pidfile already exists";
 		break;
+	case PIDFILE_NOT_EXISTS:
+		msg = "The pidfile not exists";
+		break;
 	case FORK_ERROR:
 		msg = "Can't create the subprocess";
 		break;

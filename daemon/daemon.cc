@@ -4,12 +4,13 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
+// #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <syslog.h>
 #include <unistd.h>
 
+#include <csignal>
 #include <iostream>
 #include <string>
 
@@ -22,10 +23,15 @@
 Daemon::Daemon(int address)
 {
 	addr = address;
-	started = false;
-	std::string sname = LOG_PREFIX + std::to_string(addr) + " ";
-	logger = new Logger(sname);
+	logger_title = LOG_PREFIX + std::to_string(addr) + " ";
+	logger = new Logger(logger_title);
 	pidfile_path = PIDFILE_DIRECTORY + std::to_string(get_address()) + PIDFILE_EXTENSION;
+	loop_context = false;
+}
+
+Daemon::~Daemon()
+{
+	delete logger;
 }
 
 int Daemon::get_address() 
@@ -33,14 +39,9 @@ int Daemon::get_address()
 	return addr;
 }
 
-void Daemon::log(Logger::Level level, std::string message) 
+std::string Daemon::get_pidfile_path()
 {
-	logger->log(level, message);
-}
-
-void Daemon::debug(std::string message)
-{
-	logger->log(Logger::Level::debug, message);
+	return pidfile_path;
 }
 
 bool Daemon::pidfile_exists()
@@ -130,42 +131,61 @@ void Daemon::start()
 	close(STDERR_FILENO);
 
 	/* The Big Loop */
-	log(Logger::Level::info, "Daemon started");
+	loop_context = true;
+	info("Daemon started");
 	init();
-	while (1) 
+	try
 	{
-		loop();
+		while (1) 
+		{
+			loop();
+		}
+	}
+	catch (const std::exception& exc)
+	{
+		fatal(exc.what());
+		stop();
 	}
 }
 
 void Daemon::stop()
 {
+	// --- 
 	if (!pidfile_exists()) 
 	{
 		throw DaemonException(PIDFILE_NOT_EXISTS);
 	}
 	int pid = pidfile_pid();
-	// --- trying to kill the daemon
-	int kill_counter = 3;
-	bool killed = false;
-	while ((kill(pid, 0) == 0) && (kill_counter != 0))
-	{
-		kill(pid, SIGTERM);
-		kill_counter -= 1;
-		sleep(1);
-	}
-	// --- kill daemon error
-	if (kill_counter == 0)
-	{
-		throw DaemonException(KILL_DAEMON_ERROR);
-	}
 	// --- remove pidfile
 	remove(pidfile_path.c_str());
 	if (pidfile_exists())
 	{
 		throw DaemonException(PIDFILE_DELETING_ERROR);
 	}
-	log(Logger::Level::info, "Daemon stopped");
+	// --- trying to kill the daemon
+	// --- if in loop context - just exit
+	if (loop_context)
+	{
+		info("Daemon stopped (self)");
+		exit(EXIT_SUCCESS);
+	}
+	else
+	{
+		int kill_counter = 3;
+		bool killed = false;
+		while ((kill(pid, 0) == 0) && (kill_counter != 0))
+		{
+			kill(pid, SIGTERM);
+			kill_counter -= 1;
+			sleep(1);
+		}
+		// --- kill daemon error
+		if (kill_counter == 0)
+		{
+			throw DaemonException(KILL_DAEMON_ERROR);
+		}
+		info("Daemon stopped");
+	}
 }
 
 void Daemon::restart()
@@ -201,4 +221,35 @@ void Daemon::exec(std::string cmd)
 	{
 		status();
 	}
+}
+
+
+void Daemon::log(Logger::Level level, std::string message) 
+{
+	logger->log(level, message);
+}
+
+void Daemon::debug(std::string message)
+{
+	log(Logger::Level::debug, message);
+}
+
+void Daemon::info(std::string message)
+{
+	log(Logger::Level::info, message);
+}
+
+void Daemon::warning(std::string message)
+{
+	log(Logger::Level::warning, message);
+}
+
+void Daemon::error(std::string message)
+{
+	log(Logger::Level::error, message);
+}
+
+void Daemon::fatal(std::string message)
+{
+	log(Logger::Level::fatal, message);
 }
