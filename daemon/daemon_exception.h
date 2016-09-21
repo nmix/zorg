@@ -10,6 +10,8 @@
 #define SETSID_ERROR				4
 #define CHDIR_ERROR					5
 #define PIDFILE_CREATION_ERROR		6
+#define PIDFILE_DELETING_ERROR		7
+#define KILL_DAEMON_ERROR			8
 
 class DaemonException : public std::exception {
 public:

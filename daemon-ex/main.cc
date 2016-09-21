@@ -12,10 +12,18 @@ int main(int argc, char* argv[])
 	{
 		cmd = argv[1];
 	}
-	if (argc == 3)
+	else if (argc == 3)
 	{
+		cmd = argv[1];
 		address = std::stoi(argv[2]);
 	}
 	ExDaemon d1(address);
-	d1.exec(cmd);
+	try
+	{
+		d1.exec(cmd);
+	}
+	catch (DaemonException& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 }

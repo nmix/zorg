@@ -113,12 +113,14 @@ void Daemon::start()
 
 	/* Create a new SID for the child process */
 	sid = setsid();
-	if (sid < 0) {
+	if (sid < 0) 
+	{
 		throw DaemonException(SETSID_ERROR);
 	}
 
 	/* Change the current working directory */
-	if ((chdir("/")) < 0) {
+	if ((chdir("/")) < 0) 
+	{
 		throw DaemonException(CHDIR_ERROR);
 	}
 
@@ -127,11 +129,11 @@ void Daemon::start()
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
 
-
 	/* The Big Loop */
 	log(Logger::Level::info, "Daemon started");
 	init();
-	while (1) {
+	while (1) 
+	{
 		loop();
 	}
 }
@@ -143,17 +145,27 @@ void Daemon::stop()
 		throw DaemonException(PIDFILE_NOT_EXISTS);
 	}
 	int pid = pidfile_pid();
-	// ---
+	// --- trying to kill the daemon
 	int kill_counter = 3;
 	bool killed = false;
 	while ((kill(pid, 0) == 0) && (kill_counter != 0))
 	{
-		std::cout << "Try to kill [" << kill_counter << "] " << pid << std::endl;
 		kill(pid, SIGTERM);
 		kill_counter -= 1;
 		sleep(1);
 	}
-	// ---
+	// --- kill daemon error
+	if (kill_counter == 0)
+	{
+		throw DaemonException(KILL_DAEMON_ERROR);
+	}
+	// --- remove pidfile
+	remove(pidfile_path.c_str());
+	if (pidfile_exists())
+	{
+		throw DaemonException(PIDFILE_DELETING_ERROR);
+	}
+	log(Logger::Level::info, "Daemon stopped");
 }
 
 void Daemon::restart()
@@ -164,7 +176,15 @@ void Daemon::restart()
 
 void Daemon::status()
 {
-
+	if (pidfile_exists())
+	{
+		int pid = pidfile_pid();
+		std::cout << "Daemon started [" << pid << "]" << std::endl;
+	}
+	else
+	{
+		std::cout << "Daemon stopped" << std::endl;
+	}
 }
 
 void Daemon::exec(std::string cmd)
@@ -176,5 +196,9 @@ void Daemon::exec(std::string cmd)
 	else if (cmd == "stop")
 	{
 		stop();
+	}
+	else if (cmd == "status")
+	{
+		status();
 	}
 }

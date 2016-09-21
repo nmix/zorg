@@ -37,6 +37,12 @@ std::string DaemonException::err_str(int code)
 	case PIDFILE_CREATION_ERROR:
 		msg = "The pidfile creating error";
 		break;
+	case PIDFILE_DELETING_ERROR:
+		msg = "The pidfile deleting error";
+		break;
+	case KILL_DAEMON_ERROR:
+		msg = "Can't kill daemon";
+		break;
 	}
 	return msg;
 }
