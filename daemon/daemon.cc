@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
-// #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <syslog.h>
@@ -24,14 +23,23 @@ Daemon::Daemon(int address)
 {
 	addr = address;
 	logger_title = LOG_PREFIX + std::to_string(addr) + " ";
-	logger = new Logger(logger_title);
-	pidfile_path = PIDFILE_DIRECTORY + std::to_string(get_address()) + PIDFILE_EXTENSION;
 	loop_context = false;
+	pidfile_path = PIDFILE_DIRECTORY + std::to_string(get_address()) + PIDFILE_EXTENSION;
 }
 
 Daemon::~Daemon()
 {
-	delete logger;
+}
+
+void Daemon::init_log()
+{
+	logger = new Logger(logger_title);
+}
+
+void Daemon::terminate()
+{
+	finalize();
+	info("Daemon stopped (code 1)");
 }
 
 int Daemon::get_address() 
@@ -71,11 +79,27 @@ void Daemon::pidfile_create(int pid)
 	}
 }
 
+void Daemon::pidfile_remove()
+{
+	if (!pidfile_exists()) 
+	{
+		throw DaemonException(PIDFILE_NOT_EXISTS);
+	}
+	// --- remove pidfile
+	remove(pidfile_path.c_str());
+	// --- check if file removed
+	if (pidfile_exists())
+	{
+		throw DaemonException(PIDFILE_DELETING_ERROR);
+	}
+}
+
+
 int Daemon::pidfile_pid()
 {
 	if (!pidfile_exists())
 	{
-		throw DaemonException(PIDFILE_CREATION_ERROR);
+		throw DaemonException(PIDFILE_NOT_EXISTS);
 	}
 	std::ifstream file(pidfile_path);
 	std::string pid_s( (std::istreambuf_iterator<char>(file) ),
@@ -130,6 +154,10 @@ void Daemon::start()
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
 
+	// --- initialize logger
+	init_log();
+
+
 	/* The Big Loop */
 	loop_context = true;
 	info("Daemon started");
@@ -138,6 +166,11 @@ void Daemon::start()
 	{
 		while (1) 
 		{
+			// --- check for terminate signal via shared memory
+			// ...
+			// --- check for income messages
+			// ...
+			// --- main loop
 			loop();
 		}
 	}
@@ -150,41 +183,19 @@ void Daemon::start()
 
 void Daemon::stop()
 {
-	// --- 
-	if (!pidfile_exists()) 
-	{
-		throw DaemonException(PIDFILE_NOT_EXISTS);
-	}
 	int pid = pidfile_pid();
-	// --- remove pidfile
-	remove(pidfile_path.c_str());
-	if (pidfile_exists())
-	{
-		throw DaemonException(PIDFILE_DELETING_ERROR);
-	}
+	pidfile_remove();
 	// --- trying to kill the daemon
-	// --- if in loop context - just exit
+	// --- if in loop context - terminate() and exit
 	if (loop_context)
 	{
-		info("Daemon stopped (self)");
+		terminate();
 		exit(EXIT_SUCCESS);
 	}
 	else
 	{
-		int kill_counter = 3;
-		bool killed = false;
-		while ((kill(pid, 0) == 0) && (kill_counter != 0))
-		{
-			kill(pid, SIGTERM);
-			kill_counter -= 1;
-			sleep(1);
-		}
-		// --- kill daemon error
-		if (kill_counter == 0)
-		{
-			throw DaemonException(KILL_DAEMON_ERROR);
-		}
-		info("Daemon stopped");
+		// --- send terminate signal to process via shared memory
+		// ...
 	}
 }
 
@@ -207,6 +218,29 @@ void Daemon::status()
 	}
 }
 
+void Daemon::cut()
+{
+	int pid = pidfile_pid();
+	pidfile_remove();
+	// ---
+	int kill_counter = 3;
+	bool killed = false;
+	while ((kill(pid, 0) == 0) && (kill_counter != 0))
+	{
+		kill(pid, SIGTERM);
+		kill_counter -= 1;
+		sleep(1);
+	}
+	// --- kill daemon error
+	if (kill_counter == 0)
+	{
+		throw DaemonException(KILL_DAEMON_ERROR);
+	}
+	// ---
+	Logger lg(logger_title);
+	lg.log(Logger::Level::info, "Daemon killed [" + std::to_string(pid) + "]");
+}
+
 void Daemon::exec(std::string cmd)
 {
 	if (cmd == "start")
@@ -220,6 +254,10 @@ void Daemon::exec(std::string cmd)
 	else if (cmd == "status")
 	{
 		status();
+	}
+	else if (cmd == "kill")
+	{
+		cut();
 	}
 }
 

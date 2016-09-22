@@ -11,3 +11,6 @@ add_subdirectory (logger)
 add_subdirectory (logger-ex)
 add_subdirectory (daemon)
 add_subdirectory (daemon-ex)
+# add_subdirectory (msg)
+add_subdirectory (msg-ex)
+

@@ -13,12 +13,15 @@ public:
 	void stop();
 	void restart();
 	void status();
+	void cut();
 	void exec(std::string);
 	int get_address();
 
 protected:
 	virtual void loop() = 0;
 	virtual void init() {};
+	virtual void finalize() {};
+
 	std::string get_pidfile_path();
 	void log(Logger::Level, std::string);
 	void info(std::string);
@@ -28,7 +31,10 @@ protected:
 	void fatal(std::string);
 
 private:
+	void init_log();
+	void terminate();
 	void pidfile_create(int);
+	void pidfile_remove();
 	bool pidfile_exists();
 	int pidfile_pid();
 	bool loop_context;
