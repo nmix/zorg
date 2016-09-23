@@ -7,15 +7,15 @@
 class Daemon {
 
 public:
-	Daemon(int);
+	Daemon(uint);
 	~Daemon();
 	void start();
 	void stop();
 	void restart();
 	void status();
-	void cut();
+	void kill_process();
 	void exec(std::string);
-	int get_address();
+	uint get_address() { return addr; };
 
 protected:
 	virtual void loop() = 0;
@@ -33,16 +33,27 @@ protected:
 private:
 	void init_log();
 	void terminate();
+	// --- pidfile
 	void pidfile_create(int);
 	void pidfile_remove();
 	bool pidfile_exists();
 	int pidfile_pid();
-	bool loop_context;
-
-	int addr;
+	std::string pidfile_path;
+	// ---
+	bool shared_memory_exists();
+	void shared_memory_create();
+	void shared_memory_set_flag(ushort);	
+	void shared_memory_drop_flag(ushort);	
+	bool shared_memory_get_flag(ushort);
+	void shared_memory_reset();
+	std::string shm_name;
+	// ---
 	Logger *logger;
+	std::string logger_title;
+	// ---
+	bool loop_context;
+	uint addr;
 
-	std::string pidfile_path, logger_title;
 
 };
 

@@ -12,6 +12,8 @@
 #define PIDFILE_CREATION_ERROR		6
 #define PIDFILE_DELETING_ERROR		7
 #define KILL_DAEMON_ERROR			8
+#define SHARED_MEMORY_NOT_EXISTS	9
+#define SHARED_MEMORY_CREATION_ERROR 10
 
 class DaemonException : public std::exception {
 public:

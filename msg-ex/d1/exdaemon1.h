@@ -8,14 +8,14 @@ class ExDaemon1 : public Daemon {
 
 public:
 	ExDaemon1();
-	~ExDaemon1();
 
 protected:
 	void loop();
 	void init();
+	void finalize();
 private:
-	zmq::context_t* context;
-	zmq::socket_t* pub;
+	zmq::context_t ctx;//(1);
+	zmq::socket_t pub;//(ctx, ZMQ_PUB);
 	int loop_counter;
 
 

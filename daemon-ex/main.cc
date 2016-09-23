@@ -22,8 +22,8 @@ int main(int argc, char* argv[])
 	{
 		d1.exec(cmd);
 	}
-	catch (DaemonException& e)
+	catch (const std::exception& ex)
 	{
-		std::cout << e.what() << std::endl;
+		std::cout << ex.what() << std::endl;
 	}
 }

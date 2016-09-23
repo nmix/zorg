@@ -46,6 +46,12 @@ std::string DaemonException::err_str(int code)
 	case KILL_DAEMON_ERROR:
 		msg = "Can't kill daemon";
 		break;
+	case SHARED_MEMORY_NOT_EXISTS:
+		msg = "The shared memory not exists";
+		break;
+	case SHARED_MEMORY_CREATION_ERROR:
+		msg = "Can't create shared memory";
+		break;
 	}
 	return msg;
 }

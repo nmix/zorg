@@ -8,11 +8,12 @@ class ExDaemon2 : public Daemon {
 
 public:
 	ExDaemon2();
-	~ExDaemon2();
 
 protected:
 	void loop();
 	void init();
+	void finalize();
+
 private:
 	int loop_counter;
 	zmq::context_t* context;
