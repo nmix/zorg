@@ -2,7 +2,8 @@
 #define _EXDAEMON1_H_
 
 #include "daemon.h"
-#include "zmq.hpp"
+// #include "zmq.hpp"
+#include "zhelpers.hpp"
 
 class ExDaemon1 : public Daemon {
 
@@ -14,8 +15,8 @@ protected:
 	void init();
 	void finalize();
 private:
-	zmq::context_t ctx;//(1);
-	zmq::socket_t pub;//(ctx, ZMQ_PUB);
+	zmq::context_t* ctx;
+	zmq::socket_t* pub;
 	int loop_counter;
 
 
