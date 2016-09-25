@@ -1,4 +1,3 @@
-
 #include "daemon_exception.h"
 
 DaemonException::DaemonException(std::string s)

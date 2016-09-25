@@ -116,21 +116,19 @@ void Daemon::start()
 
 	// --- logging
 	info("Daemon " + std::to_string(get_address()) + " started");
-
 	// --- main loop
+	main_loop();
+}
+
+void Daemon::main_loop()
+{
 	try
 	{
 		init();
 		while (1) 
 		{
-			// --- check for terminate signal via shared memory
-			if (shared_memory_get_flag(TERM_FLAG))
-			{
-				terminate();
-			}
-			// --- check for income messages
-			// ...
-			// --- main loop
+			check_stop();
+			// --- descendant loop
 			loop();
 		}
 	}
@@ -141,15 +139,22 @@ void Daemon::start()
 	}
 }
 
+void Daemon::check_stop()
+{
+	// --- check for terminate signal via shared memory
+	if (shared_memory_get_flag(TERM_FLAG))
+	{
+		stop();
+	}
+}
+
 void Daemon::stop()
 {
-	// int pid = pidfile_pid();
-	pidfile_remove();
-	// --- trying to kill the daemon
 	// --- if in loop context - terminate() and exit
 	if (loop_context)
 	{
 		terminate();
+		pidfile_remove();
 		exit(EXIT_SUCCESS);
 	}
 	else

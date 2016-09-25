@@ -15,7 +15,8 @@
 #define SHARED_MEMORY_NOT_EXISTS	9
 #define SHARED_MEMORY_CREATION_ERROR 10
 
-class DaemonException : public std::exception {
+class DaemonException : public std::exception 
+{
 public:
 	DaemonException(std::string);
 	DaemonException(int);
