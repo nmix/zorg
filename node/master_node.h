@@ -7,12 +7,12 @@ class MasterNode : public Node
 {
 public:
 	MasterNode();
-	void check_messages() { };
+	void check_messages();
 	bool send_to(uint, std::string);
 protected:
 
 private:
-	zmq::socket_t pub;
+	zmq::socket_t pub, puller;
 
 };
 

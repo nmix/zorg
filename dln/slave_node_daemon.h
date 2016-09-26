@@ -13,6 +13,7 @@ protected:
 	void finalize();
 	std::string recv();
 	uint awating_messages_count() { return node->awating_messages_count(); }
+	bool send(std::string);
 private:
 	void check_messages();
 	SlaveNode* node;

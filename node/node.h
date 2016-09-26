@@ -21,8 +21,10 @@ public:
 
 protected:
 	zmq::context_t ctx;
-	std::string ipcfile_path;
+	std::string ipcfile_0_path;
+	std::string ipcfile_1_path;
 	std::queue<std::string> messages_queue;
+	std::string format_message(uint, std::string);
 
 private:
 

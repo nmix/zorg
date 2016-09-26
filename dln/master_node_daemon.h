@@ -12,6 +12,7 @@ protected:
 	void init();
 	void finalize();
 	bool send_to(uint, std::string);
+	uint awating_messages_count() { return node->awating_messages_count(); }
 private:
 	void check_messages();
 	MasterNode* node;

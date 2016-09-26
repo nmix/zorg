@@ -8,12 +8,13 @@ class SlaveNode : public Node
 public:
 	SlaveNode(uint);
 	void check_messages();
+	bool send(std::string);
 
 private:
 	uint address;
 	std::string address_s;
 	zmq::pollitem_t poll[1];
-	zmq::socket_t sub;
+	zmq::socket_t sub, pusher;
 
 };
 

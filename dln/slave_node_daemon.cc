@@ -27,3 +27,8 @@ std::string SlaveNodeDaemon::recv()
 {
 	return node->recv();
 }
+
+bool SlaveNodeDaemon::send(std::string message_data)
+{
+	return node->send(message_data);
+}
