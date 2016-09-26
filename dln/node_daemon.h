@@ -2,6 +2,7 @@
 #define _NODE_DAEMON_
 
 #include "daemon.h"
+#include "node.h"
 
 class NodeDaemon : public Daemon
 {
@@ -10,9 +11,7 @@ public:
 protected:
 	virtual void process_message(std::string) = 0;
 	virtual void check_messages() = 0;
-	void init();
 private:
-	void main_loop();
 };
 
 #endif // _NODE_DAEMON_

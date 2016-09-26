@@ -1,16 +1,25 @@
 #include "master_node_daemon.h"
 
-MasterNodeDaemon::MasterNodeDaemon(int addr) : NodeDaemon(addr)
+MasterNodeDaemon::MasterNodeDaemon(uint addr) : NodeDaemon(addr)
 {
+}
 
+void MasterNodeDaemon::init()
+{
+	node = new MasterNode();
+}
+
+void MasterNodeDaemon::finalize()
+{
+	delete node;
 }
 
 void MasterNodeDaemon::check_messages()
 {
 }
 
-bool MasterNodeDaemon::send_to(int addr, std::string data)
+bool MasterNodeDaemon::send_to(uint addr, std::string data)
 {
-	// node.send_to(addr, data);
+	node->send_to(addr, data);
 	return true;
 }

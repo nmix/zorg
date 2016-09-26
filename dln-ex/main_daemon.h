@@ -12,8 +12,8 @@ private:
 	// ---
 	void init();
 	void loop();
-	// void terminate();
-
+	// ---
+	int loop_counter;
 };
 
 #endif // _MAIN_DAEMON_H_

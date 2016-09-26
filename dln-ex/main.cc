@@ -1,4 +1,5 @@
 #include "main_daemon.h"
+#include "ex_daemon.h"
 
 #include <iostream>
 #include <exception>
@@ -16,9 +17,13 @@ int main(int argc, char* argv[])
 	}
 	std::string cmd = argv[1];
 	MainDaemon d;
+	ExDaemon d1(105);
+	ExDaemon d2(106);
 	try
 	{
 		d.exec(cmd);
+		d1.exec(cmd);
+		d2.exec(cmd);
 	}
 	catch (std::exception& e)
 	{

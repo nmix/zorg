@@ -2,8 +2,7 @@
 #define _EXDAEMON1_H_
 
 #include "daemon.h"
-// #include "zmq.hpp"
-#include "zhelpers.hpp"
+#include "zmqh.hpp"
 
 class ExDaemon1 : public Daemon {
 

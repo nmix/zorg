@@ -1,6 +1,9 @@
 #ifndef __ZHELPERS_HPP_INCLUDED__
 #define __ZHELPERS_HPP_INCLUDED__
 
+// WARNING
+// NOT original zhelpers.hpp
+
 //  Include a bunch of headers that we will need in the examples
 
 #include "zmq.hpp" // https://github.com/zeromq/cppzmq
@@ -78,7 +81,7 @@ static std::string
 s_recv (zmq::socket_t & socket) {
 
     zmq::message_t message;
-    socket.recv(&message, ZMQ_NOBLOCK);
+    socket.recv(&message, ZMQ_DONTWAIT);
 
     return std::string(static_cast<char*>(message.data()), message.size());
 }

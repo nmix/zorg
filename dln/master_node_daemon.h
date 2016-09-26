@@ -7,12 +7,14 @@
 class MasterNodeDaemon : public NodeDaemon
 {
 public:
-	MasterNodeDaemon(int);
+	MasterNodeDaemon(uint);
 protected:
-	bool send_to(int, std::string);
+	void init();
+	void finalize();
+	bool send_to(uint, std::string);
 private:
 	void check_messages();
-
+	MasterNode* node;
 };
 
 #endif // _MASTER_NODE_DAEMON_H_

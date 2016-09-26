@@ -18,8 +18,8 @@ public:
 	uint get_address() { return addr; };
 
 protected:
-	void main_loop();
 	void check_stop();
+	virtual void check_messages() {};
 	// ---
 	virtual void loop() = 0;
 	virtual void init() {};

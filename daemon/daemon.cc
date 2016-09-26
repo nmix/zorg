@@ -45,7 +45,14 @@ void Daemon::init_log()
 
 void Daemon::terminate()
 {
-	finalize();
+	try
+	{
+		finalize();
+	}
+	catch (const std::exception& exc)
+	{
+		fatal(exc.what());
+	}
 	// ---
 	using namespace boost::interprocess;
 	shared_memory_object::remove(shm_name.c_str());
@@ -117,19 +124,18 @@ void Daemon::start()
 	// --- logging
 	info("Daemon " + std::to_string(get_address()) + " started");
 	// --- main loop
-	main_loop();
-}
-
-void Daemon::main_loop()
-{
 	try
 	{
 		init();
 		while (1) 
 		{
 			check_stop();
+			// --- check messages
+			check_messages();
 			// --- descendant loop
 			loop();
+			// --- 
+			usleep(1);
 		}
 	}
 	catch (const std::exception& exc)
