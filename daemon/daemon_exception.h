@@ -14,6 +14,7 @@
 #define KILL_DAEMON_ERROR			8
 #define SHARED_MEMORY_NOT_EXISTS	9
 #define SHARED_MEMORY_CREATION_ERROR 10
+#define CONFIG_FILE_NOT_EXISTS		11
 
 class DaemonException : public std::exception 
 {

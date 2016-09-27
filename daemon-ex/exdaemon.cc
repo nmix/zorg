@@ -1,6 +1,7 @@
 #include "exdaemon.h"
 
 #include <boost/format.hpp>
+#include <boost/filesystem.hpp>
 #include <unistd.h>
 
 ExDaemon::ExDaemon(int addr) : Daemon(addr) 
@@ -15,7 +16,6 @@ void ExDaemon::init()
 void ExDaemon::loop()
 {
 	log_counter += 1;
-	log(Logger::Level::debug, (boost::format("Debug message # %d") % log_counter).str());
+	debug((boost::format("Debug message %s # %d") % progname() % log_counter).str());
 	sleep(1);
-	// if (log_counter == 5) throw DaemonException("some error");
 }

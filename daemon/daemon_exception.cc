@@ -51,6 +51,9 @@ std::string DaemonException::err_str(int code)
 	case SHARED_MEMORY_CREATION_ERROR:
 		msg = "Can't create shared memory";
 		break;
+	case CONFIG_FILE_NOT_EXISTS:
+		msg = "The config file not exists";
+		break;
 	}
 	return msg;
 }

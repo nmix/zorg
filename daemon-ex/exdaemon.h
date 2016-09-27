@@ -4,15 +4,14 @@
 #include "daemon.h"
 
 class ExDaemon : public Daemon {
-
 public:
-  ExDaemon(int addr);
+	ExDaemon(int addr);
 
 protected:
-  void loop();
-  void init();
+	void init();
+	void loop();
 private:
-  int log_counter;
+	int log_counter;
 
 };
 

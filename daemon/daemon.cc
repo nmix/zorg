@@ -16,22 +16,35 @@
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/algorithm/string.hpp>
 
 #define LOG_PREFIX          "ZORG-"
-#define PIDFILE_DIRECTORY   "/tmp/zorg/"
-#define PIDFILE_EXTENSION   ".pid"
+#define PIDFILE_DIRECTORY   "/tmp/zorg"
 #define SHARED_MEMORY_PREFIX "SHM-ZORG-"
 #define SHARED_MEMORY_SIZE	2
 
 #define TERM_FLAG		0x0001
+
+extern char *__progname;
+
 
 Daemon::Daemon(uint address)
 {
 	addr = address;
 	logger_title = LOG_PREFIX + std::to_string(addr) + " ";
 	loop_context = false;
-	pidfile_path = PIDFILE_DIRECTORY + std::to_string(get_address()) + PIDFILE_EXTENSION;
+	// --- pidfile
+	boost::filesystem::path pidfile_dir(PIDFILE_DIRECTORY);
+	boost::filesystem::path pf(std::to_string(get_address()) + ".pid");
+	pidfile_path = (pidfile_dir / pf).string();
+	// --- shared memory
 	shm_name = SHARED_MEMORY_PREFIX + std::to_string(get_address());
+	// --- config
+	boost::filesystem::path current_dir( boost::filesystem::current_path() );
+	boost::filesystem::path cf(progname() + ".conf");
+	config_path = (current_dir / cf).string();
+	// --- store the directory with exe file
+	exe_dir = current_dir.string();
 }
 
 Daemon::~Daemon()
@@ -232,6 +245,45 @@ void Daemon::exec(std::string cmd)
 	}
 }
 
+std::string Daemon::progname()
+{
+	return std::string(__progname);
+}
+
+void Daemon::set_config(std::string s)
+{
+	boost::trim(s);
+	if (s[0] == '/')
+	{
+		config_path = s;
+	}
+	else
+	{
+		boost::filesystem::path current_dir( exe_dir );
+		boost::filesystem::path cf(s);
+		config_path = (current_dir / cf).string();
+	}
+}
+
+bool Daemon::config_exists()
+{
+	if (boost::filesystem::exists(config_path) && (!boost::filesystem::is_directory(config_path)))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void Daemon::load_config()
+{
+	if (!config_exists())
+	{
+		throw DaemonException(CONFIG_FILE_NOT_EXISTS); 
+	}
+}
 
 std::string Daemon::get_pidfile_path()
 {

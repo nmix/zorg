@@ -16,6 +16,10 @@ public:
 	void kill_process();
 	void exec(std::string);
 	uint get_address() { return addr; };
+	// ---
+	void set_config(std::string);
+	bool config_exists();
+	void load_config();
 
 protected:
 	void check_stop();
@@ -24,6 +28,9 @@ protected:
 	virtual void loop() = 0;
 	virtual void init() {};
 	virtual void finalize() {};
+	// ---
+	std::string progname();
+	std::string get_config_path() { return config_path; }
 
 
 	std::string get_pidfile_path();
@@ -57,7 +64,7 @@ private:
 	// ---
 	bool loop_context;
 	uint addr;
-
+	std::string exe_dir, config_path;
 
 };
 
