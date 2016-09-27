@@ -3,6 +3,7 @@
 
 #include "logger.h"
 #include "daemon_exception.h"
+#include <boost/property_tree/ptree.hpp>
 
 class Daemon {
 
@@ -31,7 +32,8 @@ protected:
 	// ---
 	std::string progname();
 	std::string get_config_path() { return config_path; }
-
+	boost::property_tree::ptree config_tree;
+	// ---
 
 	std::string get_pidfile_path();
 	void log(Logger::Level, std::string);

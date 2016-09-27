@@ -17,6 +17,7 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #define LOG_PREFIX          "ZORG-"
 #define PIDFILE_DIRECTORY   "/tmp/zorg"
@@ -283,6 +284,8 @@ void Daemon::load_config()
 	{
 		throw DaemonException(CONFIG_FILE_NOT_EXISTS); 
 	}
+	// ---
+	boost::property_tree::read_json(config_path, config_tree);
 }
 
 std::string Daemon::get_pidfile_path()

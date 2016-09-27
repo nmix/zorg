@@ -11,6 +11,10 @@ ExDaemon::ExDaemon(int addr) : Daemon(addr)
 
 void ExDaemon::init()
 {
+	// load_config();
+	// std::string val = config_tree.get<std::string>("foo");
+	// int test = config_tree.get("test", 0);
+	// debug("condif file: foo = " + val + " test = " + std::to_string(test));
 }
 
 void ExDaemon::loop()
