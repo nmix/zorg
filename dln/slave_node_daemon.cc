@@ -19,16 +19,15 @@ void SlaveNodeDaemon::check_messages()
 	node->check_messages();
 	if (node->has_messages())
 	{
-		process_message(recv());
+		std::string s = node->recv();
+		info(" msg in: " + s);
+		process_message(s);
 	}
 }
 
-std::string SlaveNodeDaemon::recv()
-{
-	return node->recv();
-}
 
 bool SlaveNodeDaemon::send(std::string message_data)
 {
+	info("msg out: " + message_data);
 	return node->send(message_data);
 }

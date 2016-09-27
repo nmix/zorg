@@ -17,6 +17,5 @@ void ExDaemon::loop()
 
 void ExDaemon::process_message(std::string message)
 {
-	debug("income message---->  " + message);
 	send("world! " + message);
 }

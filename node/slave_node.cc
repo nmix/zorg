@@ -12,15 +12,21 @@ SlaveNode::SlaveNode(uint addr) : Node(), sub(ctx, ZMQ_SUB), pusher(ctx, ZMQ_PUS
 
 void SlaveNode::check_messages()
 {
-	zmq::poll(&poll[0], 1, 0);
-	if (poll[0].revents & ZMQ_POLLIN)
+	if (outgoing_messages_queue.size() > 0)
 	{
-		std::string message_data = s_recv(sub).substr(address_s.size());
-		messages_queue.push(message_data);
+		std::string message = outgoing_messages_queue.front();
+		outgoing_messages_queue.pop();
+		s_send(pusher, message);
+	}
+	std::string message = s_recv(sub);
+	if (!message.empty())
+	{
+		ingoing_messages_queue.push(message);
 	}
 }
 
 bool SlaveNode::send(std::string message_data)
 {
-	return s_send(pusher, format_message(address, message_data));
+	outgoing_messages_queue.push(format_message(address, message_data));
+	return true;
 }

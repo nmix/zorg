@@ -15,7 +15,6 @@ private:
 	std::string address_s;
 	zmq::pollitem_t poll[1];
 	zmq::socket_t sub, pusher;
-
 };
 
 #endif // _SLAVE_NODE_H_

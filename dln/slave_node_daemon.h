@@ -11,7 +11,6 @@ public:
 protected:
 	void init();
 	void finalize();
-	std::string recv();
 	uint awating_messages_count() { return node->awating_messages_count(); }
 	bool send(std::string);
 private:

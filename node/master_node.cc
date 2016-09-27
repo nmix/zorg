@@ -8,14 +8,21 @@ MasterNode::MasterNode() : Node(), pub(ctx, ZMQ_PUB), puller(ctx, ZMQ_PULL)
 
 bool MasterNode::send_to(uint addr, std::string data)
 {
-	return s_send(pub, format_message(addr, data));
+	outgoing_messages_queue.push(format_message(addr, data));
+	return true;
 }
 
 void MasterNode::check_messages()
 {
+	if (outgoing_messages_queue.size() > 0)
+	{
+		std::string message = outgoing_messages_queue.front();
+		outgoing_messages_queue.pop();
+		s_send(pub, message);
+	}
 	std::string message = s_recv(puller);
 	if (!message.empty())
 	{
-		messages_queue.push(message);
+		ingoing_messages_queue.push(message);
 	}
 }

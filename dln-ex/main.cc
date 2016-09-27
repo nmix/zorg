@@ -19,11 +19,13 @@ int main(int argc, char* argv[])
 	MainDaemon d;
 	ExDaemon d1(105);
 	ExDaemon d2(106);
+	ExDaemon d3(111);
 	try
 	{
 		d.exec(cmd);
 		d1.exec(cmd);
 		d2.exec(cmd);
+		d3.exec(cmd);
 	}
 	catch (std::exception& e)
 	{

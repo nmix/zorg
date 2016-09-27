@@ -28,18 +28,18 @@ Node::Node() : ctx(1)
 
 std::string Node::recv()
 {
-	if (messages_queue.size() == 0)
+	if (ingoing_messages_queue.size() == 0)
 	{
 		return "";
 	}
-	std::string message = messages_queue.front();
-	messages_queue.pop();
+	std::string message = ingoing_messages_queue.front();
+	ingoing_messages_queue.pop();
 	return message;
 }
 
 bool Node::has_messages()
 {
-	if (messages_queue.size() > 0)
+	if (ingoing_messages_queue.size() > 0)
 	{
 		return true;
 	}

@@ -17,14 +17,15 @@ public:
 	virtual bool send_to(uint, std::string) {};
 	std::string recv();
 	bool has_messages();
-	uint awating_messages_count() { return messages_queue.size(); }
+	uint awating_messages_count() { return ingoing_messages_queue.size(); }
+	std::string format_message(uint, std::string);
 
 protected:
 	zmq::context_t ctx;
 	std::string ipcfile_0_path;
 	std::string ipcfile_1_path;
-	std::queue<std::string> messages_queue;
-	std::string format_message(uint, std::string);
+	std::queue<std::string> ingoing_messages_queue;
+	std::queue<std::string> outgoing_messages_queue;
 
 private:
 
