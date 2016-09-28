@@ -94,6 +94,13 @@ tailf /var/log/syslog | grep LOGGER
 Запускаем пример
 ```bash
 ./lgr
+# в другой консоли
+# tailf /var/log/syslog | grep LOGGER
+Sep 28 15:39:09 udvb LOGGER-EX[20258]:     debug : Debug message
+Sep 28 15:39:09 udvb LOGGER-EX[20258]:      info : Info message
+Sep 28 15:39:09 udvb LOGGER-EX[20258]:   warning : Warning message
+Sep 28 15:39:09 udvb LOGGER-EX[20258]:     error : Error message
+Sep 28 15:39:09 udvb LOGGER-EX[20258]:     fatal : Fatal message
 ```
 #### Описание
 Класс `Logger` представляет собой "тонкую" обертку вокруг системного вызова `syslog`.
