@@ -1,5 +1,5 @@
 #include "exdaemon.h"
-
+#include <boost/format.hpp>
 #include <iostream>
 #include <exception>
 #include <string>
@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
 		address = std::stoi(argv[2]);
 	}
 	ExDaemon d1(address);
+	d1.set_log_prefix((boost::format("MYDAEMON<%d>") % address).str());
 	try
 	{
 		d1.exec(cmd);

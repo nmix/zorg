@@ -19,7 +19,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#define LOG_PREFIX          "ZORG-"
+#define DEFAULTLOG_PREFIX         "ZORG-"
 #define PIDFILE_DIRECTORY   "/tmp/zorg"
 #define SHARED_MEMORY_PREFIX "SHM-ZORG-"
 #define SHARED_MEMORY_SIZE	2
@@ -32,7 +32,7 @@ extern char *__progname;
 Daemon::Daemon(uint address)
 {
 	addr = address;
-	logger_title = LOG_PREFIX + std::to_string(addr) + " ";
+	logger_title = DEFAULTLOG_PREFIX + std::to_string(addr) + " ";
 	loop_context = false;
 	// --- pidfile
 	boost::filesystem::path pidfile_dir(PIDFILE_DIRECTORY);
@@ -50,6 +50,11 @@ Daemon::Daemon(uint address)
 
 Daemon::~Daemon()
 {
+}
+
+void Daemon::set_log_prefix(std::string prefix)
+{
+	logger_title = prefix;
 }
 
 void Daemon::init_log()
@@ -143,7 +148,11 @@ void Daemon::start()
 		init();
 		while (1) 
 		{
-			check_stop();
+			// --- check for terminate signal via shared memory
+			if (shared_memory_get_flag(TERM_FLAG))
+			{
+				stop();
+			}
 			// --- check messages
 			check_messages();
 			// --- descendant loop
@@ -155,15 +164,6 @@ void Daemon::start()
 	catch (const std::exception& exc)
 	{
 		fatal(exc.what());
-		stop();
-	}
-}
-
-void Daemon::check_stop()
-{
-	// --- check for terminate signal via shared memory
-	if (shared_memory_get_flag(TERM_FLAG))
-	{
 		stop();
 	}
 }

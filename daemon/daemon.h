@@ -17,24 +17,23 @@ public:
 	void kill_process();
 	void exec(std::string);
 	uint get_address() { return addr; };
+	void set_log_prefix(std::string);
 	// ---
 	void set_config(std::string);
 	bool config_exists();
 	void load_config();
 
 protected:
-	void check_stop();
-	virtual void check_messages() {};
-	// ---
 	virtual void loop() = 0;
 	virtual void init() {};
 	virtual void finalize() {};
+	// ---
+	virtual void check_messages() {};
 	// ---
 	std::string progname();
 	std::string get_config_path() { return config_path; }
 	boost::property_tree::ptree config_tree;
 	// ---
-
 	std::string get_pidfile_path();
 	void log(Logger::Level, std::string);
 	void info(std::string);

@@ -117,9 +117,176 @@ void log(Logger::Level, std::string);
 ```
 выполняет запись сообщения в журанл `/var/log/syslog`.
 
-
-
 ### Класс Daemon
+#### Порядок использования класса
+1) Наследование от класса `Daemon` с передачей ему адреса. Адрес используется при сохранении идентификатора процесса, а также при обмене сообщениями.
+2) Определение метода `loop()`. Данный метод реализует основной контекст исполнения процесса.
+3) Определение методов `init()` и `finalize()` для иницализации и финализации соответственно. Методы вызываются однократно до или после основного контекста.
+
+#### Пример - тестовый процесс
+Файл `exdaemon.h`.
+```cpp
+#ifndef _EXDAEMON_H_
+#define _EXDAEMON_H_
+
+#include <zorg/daemon.h>
+
+class ExDaemon : public Daemon {
+public:
+	ExDaemon(uint addr);
+protected:
+	void init();
+	void loop();
+	void finalize();
+private:
+	int log_counter;
+};
+#endif // _EXDAEMON_H_
+```
+
+Файл `exdaemon.cc`
+```cpp
+#include "exdaemon.h"
+#include <boost/format.hpp>
+
+ExDaemon::ExDaemon(uint addr) : Daemon(addr)
+{
+  log_counter = 0;
+}
+
+/*
+ * Метод init() вызывается однократно в контексте исполнения процесса
+ */
+void ExDaemon::init()
+{
+	debug("init()");
+    // чтение файла конфигурации (см. описание ниже)
+	load_config();
+	std::string val = config_tree.get<std::string>("foo");
+	int test = config_tree.get("test", 0);
+	debug("config file: foo = " + val + " test = " + std::to_string(test));
+}
+
+/*
+ * Основной контекст исполнения программы - бизнес-логика процесса.
+ * Метод вызывается в бесконечном цикле в классе `Daemon`
+ */
+void ExDaemon::loop()
+{
+	log_counter += 1;
+	debug((boost::format("Debug message %s # %d") % progname() % log_counter).str());
+	if (log_counter > 9) stop();
+	sleep(1);
+}
+
+/*
+ * Финализация - вызывается однократно перед завершением работы демона.
+ */
+void ExDaemon::finalize()
+{
+	debug("finalize()");
+}
+```
+
+Файл `zdex.conf` - файл конфигурации. По-умолчанию метод `load_config()` загружает конфигурацию в формате `json` из файла `<имя-программы>.conf`, находящегося в текущей директории, в объект config_tree класса [boost::property_tree::ptree](http://www.boost.org/doc/libs/1_62_0/doc/html/property_tree.html). Можно задать путь к файлу конфигурации методом `set_config()`.
+```json
+{
+  "foo": "bar",
+  "test": 1  
+}
+```
+
+Файл `main.cc`. Процесс запускается методом `start()`, останавливается - методом `stop()`. Для удобства определен метод `exec()`, который принимает в качестве аргумента строковые аналоги команд.
+```cpp
+#include "exdaemon.h"
+#include <boost/format.hpp>
+#include <iostream>
+#include <exception>
+#include <string>
+
+int main(int argc, char* argv[])
+{
+	int address = 1;
+	std::string cmd = "start";
+	if (argc == 2)
+	{
+		cmd = argv[1];
+	}
+	else if (argc == 3)
+	{
+		cmd = argv[1];
+		address = std::stoi(argv[2]);
+	}
+	ExDaemon d1(address);
+	d1.set_log_prefix((boost::format("MYDAEMON<%d>") % address).str());
+	try
+	{
+		d1.exec(cmd);
+	}
+	catch (const std::exception& ex)
+	{
+		std::cout << ex.what() << std::endl;
+	}
+}
+```
+Компилируем и собираем
+```bash
+ g++ main.cc exdaemon.cc -o zdex -std=c++11 -lzlogger -lzdaemon -lboost_filesystem
+ ```
+В другой консоли запускаем парсинг системного журнала
+```bash
+tailf /var/log/syslog | grep MYDAEMON
+```
+В первой консоли запускаем исполняемый файл
+```bash
+./zdex start
+# ... консоль с парсером
+# tailf /var/log/syslog | grep MYDAEMON
+Sep 28 20:57:41 udvb MYDAEMON<1>[6684]:      info : Daemon 1 started
+Sep 28 20:57:41 udvb MYDAEMON<1>[6684]:     debug : init()
+Sep 28 20:57:41 udvb MYDAEMON<1>[6684]:     debug : config file: foo = bar test = 1
+Sep 28 20:57:41 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 1
+Sep 28 20:57:42 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 2
+Sep 28 20:57:43 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 3
+Sep 28 20:57:44 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 4
+Sep 28 20:57:45 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 5
+Sep 28 20:57:46 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 6
+Sep 28 20:57:47 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 7
+Sep 28 20:57:48 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 8
+Sep 28 20:57:49 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 9
+Sep 28 20:57:50 udvb MYDAEMON<1>[6684]:     debug : Debug message zdex # 10
+Sep 28 20:57:50 udvb MYDAEMON<1>[6684]:     debug : finalize()
+Sep 28 20:57:50 udvb MYDAEMON<1>[6684]:      info : Daemon stopped
+```
+#### Методы класса Daemon
+Метод|Описание
+-----|-------
+**public**|
+bool config_exists()| Возвращает `true` если файл конфигурации существует.
+void exec(std::string)|Команда процессу, варианты: "start", "stop", "status", "restart", "kill".
+uint get_address()|Получение адреса процесса
+void kill_process()|Сброс процесса. Метод finalize() не вызывается.
+void load_config()| Загружает файл конфигурации в объект `boost::property_tree::ptree config_tree`
+void restart()|Перезапуск процесса
+void set_config(std::string)|Задать файл конфигурации в аболютном или относительном формате. Пример: "/tmp/foo.cfg"
+void set_log_prefix(std::string)|Установить префикс для записей журнала
+void start()|Запуск процесса
+void status()|Отображение статуса процесса: запущен/остановлен
+void stop()|Останов процесса. Перед завершением процесса вызывается метод finalize().
+**protected**|
+virtual void check_messages()|Виртуальный метод. Прием и отправка сообщений. Вызывается перед каждым проходом основного цикла.
+void debug(std::string)|Вывод строки в журнал с уровнем Logger::Level::debug
+void error(std::string)|Вывод строки в журнал с уровнем Logger::Level::error
+void fatal(std::string)|Вывод строки в журнал с уровнем Logger::Level::fatal
+virtual void finalize()|Виртаульный метод. Вызывается после выхода из основного цикла процесса.
+std::string get_config_path()|Возвращает абсолютный путь к файлу конфигурации.
+std::string get_pidfile_path()|Возвращает абсолютный путь к файлу с идентификатором процесса
+void info(std::string)|Вывод строки в журнал с уровнем Logger::Level::ingo
+virtual void init()|Виртуальный метод. Вызывается перед запуском основного цикла процесса.
+void log(Logger::Level, std::string)|Вывод строки в журнал с заданным уровнем (debug, info, warning, error, fatal)
+virtual void loop() = 0|Абстрактный метод. Основной цикл процесса.
+std::string progname()|Возвращает символическое имя процесса.
+void warning(std::string)|Вывод строки в журнал с уровнем Logger::Level::warning
 
 ### Класс Node
 

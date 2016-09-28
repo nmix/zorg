@@ -5,11 +5,12 @@
 
 class ExDaemon : public Daemon {
 public:
-	ExDaemon(int addr);
+	ExDaemon(uint addr);
 
 protected:
 	void init();
 	void loop();
+	void finalize();
 private:
 	int log_counter;
 
