@@ -119,8 +119,12 @@ void log(Logger::Level, std::string);
 
 ### Класс Daemon
 #### Порядок использования класса
+
+
 1) Наследование от класса `Daemon` с передачей ему адреса. Адрес используется при сохранении идентификатора процесса, а также при обмене сообщениями.
+
 2) Определение метода `loop()`. Данный метод реализует основной контекст исполнения процесса.
+
 3) Определение методов `init()` и `finalize()` для иницализации и финализации соответственно. Методы вызываются однократно до или после основного контекста.
 
 #### Пример - тестовый процесс
@@ -359,3 +363,240 @@ std::string format_message(uint addr, std::string data)|Формирование
 
 
 ### DLN
+DLN (Daemon-Logger-Node) - это библиотека, обеспечивающая создание и взаимодействие независимых контекстов (процессов) исполнения программой системы.
+
+#### Пример
+Ниже приведен тривильный пример, в котором 1 "старший" и 3 "младших" процесса взаимодействуют между собой.
+##### Старший процесс
+Файл `main_daemon.h`
+```cpp
+#ifndef _MAIN_DAEMON_H_
+#define _MAIN_DAEMON_H_
+
+#include <zorg/master_node_daemon.h>
+
+class MainDaemon : public MasterNodeDaemon
+{
+public:
+	MainDaemon();	
+private:
+	void process_message(std::string);
+	// ---
+	void init();
+	void loop();
+	// ---
+	int loop_counter;
+};
+
+#endif // _MAIN_DAEMON_H_
+```
+Файл `main_daemon.cc`
+```cpp
+#include "main_daemon.h"
+#include <boost/format.hpp>
+
+#define ADDRESS 		101
+
+MainDaemon::MainDaemon() : MasterNodeDaemon(ADDRESS)
+{
+}
+
+void MainDaemon::init()
+{
+	// обязательный вызов метода init() родительского класса для инициализации
+    // классов обмена сообщений в контексте исполнения процесса
+	MasterNodeDaemon::init();
+	loop_counter = 0;
+}
+
+// основной цикл процесса
+// последовательная отправка трех сообщений трем процессам с адресами 105, 106 и 111
+void MainDaemon::loop()
+{
+	if (loop_counter < 3)
+	{
+		send_to(105, "hello 105 " + std::to_string(loop_counter));
+		send_to(106, "hello 106 " + std::to_string(loop_counter));
+		send_to(111, "hello 111 " + std::to_string(loop_counter));
+	}
+	loop_counter += 1;
+}
+
+// переопределяем виртуальный абстрактный метод `process_message()` 
+// родительского класса
+void MainDaemon::process_message(std::string message)
+{
+}
+```
+##### Младший процесс
+Файл `ex_daemon.h`
+```cpp
+#ifndef _EX_DAEMON_H_
+#define _EX_DAEMON_H_
+
+#include <zorg/slave_node_daemon.h>
+
+class ExDaemon : public SlaveNodeDaemon
+{
+public:
+	ExDaemon(uint);	
+private:
+	void process_message(std::string);
+	// ---
+	void init();
+	void loop();
+	// ---
+	int loop_counter;
+};
+#endif // _EX_DAEMON_H_
+```
+Файл `ex_daemon.cc`
+```cpp
+#include "ex_daemon.h"
+
+ExDaemon::ExDaemon(uint addr) : SlaveNodeDaemon(addr)
+{
+}
+
+void ExDaemon::init()
+{
+	// обязательный вызов метода init() родительского класса для инициализации
+    // классов обмена сообщений в контексте исполнения процесса
+	SlaveNodeDaemon::init();
+	loop_counter = 0;
+}
+
+void ExDaemon::loop()
+{
+}
+
+// обработка входящего сообщения
+// добавляем в ответное сообщение данные из входящего
+void ExDaemon::process_message(std::string message)
+{
+	send("world! " + message);
+}
+```
+##### Стартер
+Файл `main.cc`
+```cpp
+#include "main_daemon.h"
+#include "ex_daemon.h"
+
+#include <iostream>
+#include <exception>
+#include <string>
+#include <unistd.h>
+
+int main(int argc, char* argv[])
+{
+	if (argc != 2)
+	{
+		std::cerr << "Usage: dln start|stop|status" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	std::string cmd = argv[1];
+    // --- старший процесс
+	MainDaemon d;
+    // --- 3 экземпляра младшего процесса
+	ExDaemon d1(105);
+	ExDaemon d2(106);
+	ExDaemon d3(111);
+	try
+	{
+		d.exec(cmd);
+		d1.exec(cmd);
+		d2.exec(cmd);
+		d3.exec(cmd);
+	}
+	catch (std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
+}
+```
+##### Компиляция, сборка и запуск
+```bash
+g++ main.cc main_daemon.cc ex_daemon.cc -o dln -std=c++11 -lzdaemon -lzlogger -lznode -lzdln -lzmq
+```
+
+В другой консоли запускаем просмотр журанала работы
+```bash
+tailf /var/log/syslog | grep ZORG
+```
+Запуск процессов
+```bash
+./dln start
+# tailf /var/log/syslog | grep ZORG
+Sep 29 15:47:13 udvb ZORG-106 [7947]:      info : Daemon 106 started
+Sep 29 15:47:13 udvb ZORG-111 [7948]:      info : Daemon 111 started
+Sep 29 15:47:13 udvb ZORG-105 [7946]:      info : Daemon 105 started
+Sep 29 15:47:13 udvb ZORG-101 [7945]:      info : Daemon 101 started
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info : msg out: 105#hello 105 0
+Sep 29 15:47:14 udvb ZORG-105 [7946]:      info :  msg in: 105#hello 105 0
+Sep 29 15:47:14 udvb ZORG-105 [7946]:      info : msg out: world! 105#hello 105 0
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info : msg out: 106#hello 106 0
+Sep 29 15:47:14 udvb ZORG-106 [7947]:      info :  msg in: 106#hello 106 0
+Sep 29 15:47:14 udvb ZORG-106 [7947]:      info : msg out: world! 106#hello 106 0
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info : msg out: 111#hello 111 0
+Sep 29 15:47:14 udvb ZORG-111 [7948]:      info :  msg in: 111#hello 111 0
+Sep 29 15:47:14 udvb ZORG-111 [7948]:      info : msg out: world! 111#hello 111 0
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info :  msg in: 105#world! 105#hello 105 0
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info :  msg in: 106#world! 106#hello 106 0
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info :  msg in: 111#world! 111#hello 111 0
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info : msg out: 105#hello 105 1
+Sep 29 15:47:14 udvb ZORG-105 [7946]:      info :  msg in: 105#hello 105 1
+Sep 29 15:47:14 udvb ZORG-105 [7946]:      info : msg out: world! 105#hello 105 1
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info : msg out: 106#hello 106 1
+Sep 29 15:47:14 udvb ZORG-106 [7947]:      info :  msg in: 106#hello 106 1
+Sep 29 15:47:14 udvb ZORG-106 [7947]:      info : msg out: world! 106#hello 106 1
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info : msg out: 111#hello 111 1
+Sep 29 15:47:14 udvb ZORG-111 [7948]:      info :  msg in: 111#hello 111 1
+Sep 29 15:47:14 udvb ZORG-111 [7948]:      info : msg out: world! 111#hello 111 1
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info :  msg in: 105#world! 105#hello 105 1
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info :  msg in: 106#world! 106#hello 106 1
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info :  msg in: 111#world! 111#hello 111 1
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info : msg out: 105#hello 105 2
+Sep 29 15:47:14 udvb ZORG-105 [7946]:      info :  msg in: 105#hello 105 2
+Sep 29 15:47:14 udvb ZORG-105 [7946]:      info : msg out: world! 105#hello 105 2
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info : msg out: 106#hello 106 2
+Sep 29 15:47:14 udvb ZORG-106 [7947]:      info :  msg in: 106#hello 106 2
+Sep 29 15:47:14 udvb ZORG-106 [7947]:      info : msg out: world! 106#hello 106 2
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info : msg out: 111#hello 111 2
+Sep 29 15:47:14 udvb ZORG-111 [7948]:      info :  msg in: 111#hello 111 2
+Sep 29 15:47:14 udvb ZORG-111 [7948]:      info : msg out: world! 111#hello 111 2
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info :  msg in: 105#world! 105#hello 105 2
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info :  msg in: 106#world! 106#hello 106 2
+Sep 29 15:47:14 udvb ZORG-101 [7945]:      info :  msg in: 111#world! 111#hello 111 2
+```
+
+Проверка статуса процссов
+```bash
+./dln status
+Daemon started [7945]
+Daemon started [7946]
+Daemon started [7947]
+Daemon started [7948]
+
+```
+Останов процессов
+```bash
+./dln stop
+# tailf /var/log/syslog | grep ZORG
+# ...
+Sep 29 15:54:35 udvb ZORG-106 [7947]:      info : Daemon stopped
+Sep 29 15:54:35 udvb ZORG-101 [7945]:      info : Daemon stopped
+Sep 29 15:54:35 udvb ZORG-105 [7946]:      info : Daemon stopped
+Sep 29 15:54:35 udvb ZORG-111 [7948]:      info : Daemon stopped
+```
+#### Описание
+
+Для реализации программной системы нескольких независимых контекстов необходимо наследоваться от класса `MasterNodeDaemon`, который реализует функционал "старшего" процесса, и наследоваться от класса `SlaveNodeDaemon`, реализующего функции "младшего" процесса.
+Для корректного функционирования в системе может существовать только один старший процесс, и произвольное количество младших. Кроме того, в текущей реализации проекта, проверялась работа одного набора контекстов в операционной системе, т.е. запуск разных программных систем, в каждой из которых существуют свои старшие и младшие процессы в пределах одной операционной системы не проводился.
+
+При наследовании от классов `MasterNodeDaemon` и `SlaveNodeDaemon` необходимо, кроме метода `loop()`, переопределить метод `process_message()`. Указанный метод будет вызываться всякий раз, когда процесс получит сообщение, адрессованное ему. Также обязательным условием корректного использования родительских классов является вызов родительских `init()` и `finalize()` при определении собстенных методов инициализации и деинициализации.
+
+Для отправки сообщения "младшему" процессу используется метод класса `send_to(uint addr, std::string data)`, где `addr` - адресат, `data` - данные сообщения. Отправка сообщения "старшему" процессу осуществляется методом `send(std::string data)`, при этом в начало сообщения автоматически добавляется адрес отправителя.
+
+
+**КОНЕЦ**

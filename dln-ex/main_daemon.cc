@@ -16,7 +16,7 @@ void MainDaemon::init()
 
 void MainDaemon::loop()
 {
-	if (loop_counter < 10)
+	if (loop_counter < 3)
 	{
 		send_to(105, "hello 105 " + std::to_string(loop_counter));
 		send_to(106, "hello 106 " + std::to_string(loop_counter));
