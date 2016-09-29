@@ -4,7 +4,8 @@
 #include <exception>
 #include <string>
 
-#define UNEXPECTED_SEND		1
+#define NO_DATA_AVAILABLE		1
+
 
 class NodeException : public std::exception
 {
@@ -12,6 +13,7 @@ public:
 	NodeException(std::string);
 	NodeException(int);
 	const char* what() const throw();
+	int code() { return err_code; }
 private:
 	std::string err_str(int);
 	

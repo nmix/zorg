@@ -10,7 +10,7 @@ SlaveNode::SlaveNode(uint addr) : Node(), sub(ctx, ZMQ_SUB), pusher(ctx, ZMQ_PUS
 	poll[0] = { sub, 0, ZMQ_POLLIN, 0 };
 }
 
-void SlaveNode::check_messages()
+bool SlaveNode::check_messages()
 {
 	if (outgoing_messages_queue.size() > 0)
 	{
@@ -23,10 +23,12 @@ void SlaveNode::check_messages()
 	{
 		ingoing_messages_queue.push(message);
 	}
+	return has_messages();
 }
 
 bool SlaveNode::send(std::string message_data)
 {
 	outgoing_messages_queue.push(format_message(address, message_data));
+	check_messages();
 	return true;
 }

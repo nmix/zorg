@@ -13,24 +13,23 @@
 
 Node::Node() : ctx(1)
 {
-	if (!boost::filesystem::exists(IPCFILE_DIRECTORY))
+	boost::filesystem::path ipc_dir(IPCFILE_DIRECTORY);
+	if (!boost::filesystem::exists(ipc_dir))
 	{
-		boost::filesystem::create_directory(IPCFILE_DIRECTORY);
+		boost::filesystem::create_directory(ipc_dir);
 	}
 	// ---
-	std::string ipcfile_dir{ IPCFILE_DIRECTORY };
-	std::string ipcfile_0 { IPCFILE_0 };
-	std::string ipcfile_1 { IPCFILE_1 };
-	ipcfile_0_path = "ipc://" + ipcfile_dir + ipcfile_0;
-	ipcfile_1_path = "ipc://" + ipcfile_dir + ipcfile_1;
-	
+	boost::filesystem::path ipcfile_0(IPCFILE_0);
+	boost::filesystem::path ipcfile_1(IPCFILE_1);
+	ipcfile_0_path = "ipc://" + (ipc_dir / ipcfile_0).string();
+	ipcfile_1_path = "ipc://" + (ipc_dir / ipcfile_1).string();	
 }
 
 std::string Node::recv()
 {
 	if (ingoing_messages_queue.size() == 0)
 	{
-		return "";
+		throw NodeException(NO_DATA_AVAILABLE);
 	}
 	std::string message = ingoing_messages_queue.front();
 	ingoing_messages_queue.pop();

@@ -17,7 +17,7 @@ void SlaveNodeDaemon::finalize()
 void SlaveNodeDaemon::check_messages()
 {
 	node->check_messages();
-	if (node->has_messages())
+	while (node->has_messages())
 	{
 		std::string s = node->recv();
 		info(" msg in: " + s);

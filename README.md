@@ -289,5 +289,73 @@ std::string progname()|Возвращает символическое имя п
 void warning(std::string)|Вывод строки в журнал с уровнем Logger::Level::warning
 
 ### Класс Node
+#### Тривиальный пример
+Файл `main.cc`
+```cpp
+#include <iostream>
+#include <string>
+#include <unistd.h>
+#include <zorg/master_node.h>
+#include <zorg/slave_node.h>
+
+int main(int, char*[])
+{
+	MasterNode master_node; // "старший" узел
+	SlaveNode slave_node(10); // "младщий" узел с адресом 10
+	sleep(1);	// задержка для переходных процессов в ZMQ (создание сокета)
+	int counter = 0;
+	while (true)
+	{
+		// --- прием и отправка сообщений на старшем узле
+        usleep(10);
+		if (master_node.check_messages())
+		{
+			std::cout << "master_node: " << master_node.recv() << std::endl;
+		}
+		master_node.send_to(10, "hello " + std::to_string(counter));
+		// --- прием и отправка сообщений на младшем узле
+        usleep(10);
+		if (slave_node.check_messages())
+		{
+			std::cout << " slave_node: " << slave_node.recv() << std::endl;
+			slave_node.send("world " + std::to_string(counter));
+		}
+		// ---
+		counter += 1;
+		sleep(1);
+	}
+	return 0;
+}
+```
+Компиляция и сборка
+```bash
+g++ main.cc -o nd -std=c++11 -lznode -lboost_filesystem -lzmq
+```
+Запуск
+```bash
+./nd
+ slave_node: 10#hello 0
+master_node: 10#world 0
+ slave_node: 10#hello 1
+master_node: 10#world 1
+ slave_node: 10#hello 2
+master_node: 10#world 2
+ slave_node: 10#hello 3
+...
+```
+
+#### Описание
+В библиотеке libznode реализован централизованный метод обмена сообщениями: один старший узел и один или более младших узлов. Старший узел передает сообщение в адрес младшего узла, младшие узлы передают сообщения старшему.
+Чтение сообщений происходят в неблокирующем режиме. Это сделано для того, чтобы была возможность корректного использования узлов в контексте процессов. Блокированный какой-либо операцией процесс затруднительно корректно завершить.
+Прием и передача соощений ведется через буферы входящий и исходящий буферы обмена соответственно. Методы передачи `send`, `send_to` и метод приема `recv` помещают и извлекают сообщения из буфера, при том как метод `check_messages` производит непосредственную передачу сообщения из буфера в сокет и прием сообщения из сокета с помещением во входящий буфер. Буферы сообщений реализованы классом `std::queue<std::string>`.
+#### Методы
+Метод|Описание
+-----|-----
+**public**|
+std::string recv()|Получение первого сообщения из буфера входящих сообщений. При этом полученное сообщение из буфера удаляется.  Если перед вызовом `recv()` буфер пустой, то генерируется исключение `NodeException` с кодом `NO_DATA_AVAILABLE`.
+bool has_messages()|Возвращает `true`, если во входящем буфере имеются сообщения.
+uint awating_messages_count()|Возвращает количество сообщений во буфере входящих сообщений.
+std::string format_message(uint addr, std::string data)|Формирование строки отправляемого сообщения: `addr` - адрес получателя или отправителя, `data` - данные сообщения.
+
 
 ### DLN

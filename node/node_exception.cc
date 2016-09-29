@@ -21,8 +21,8 @@ std::string NodeException::err_str(int code)
 {
 	std::string msg = "Unknown error";
 	switch(code) {
-	case UNEXPECTED_SEND:
-		msg = "Incorrect using send method for the current node type";
+	case NO_DATA_AVAILABLE:
+		msg = "No data available";
 		break;
 	}
 	return msg;

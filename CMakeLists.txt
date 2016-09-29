@@ -16,3 +16,5 @@ add_subdirectory (node-ex)
 add_subdirectory (node-ex2)
 add_subdirectory (dln)
 add_subdirectory (dln-ex)
+
+install(DIRECTORY include/ DESTINATION /usr/local/include/zorg FILES_MATCHING PATTERN "*.hpp")

@@ -6,13 +6,7 @@ MasterNode::MasterNode() : Node(), pub(ctx, ZMQ_PUB), puller(ctx, ZMQ_PULL)
 	puller.bind(ipcfile_1_path);
 }
 
-bool MasterNode::send_to(uint addr, std::string data)
-{
-	outgoing_messages_queue.push(format_message(addr, data));
-	return true;
-}
-
-void MasterNode::check_messages()
+bool MasterNode::check_messages()
 {
 	if (outgoing_messages_queue.size() > 0)
 	{
@@ -25,4 +19,12 @@ void MasterNode::check_messages()
 	{
 		ingoing_messages_queue.push(message);
 	}
+	return has_messages();
+}
+
+bool MasterNode::send_to(uint addr, std::string data)
+{
+	outgoing_messages_queue.push(format_message(addr, data));
+	check_messages();
+	return true;
 }

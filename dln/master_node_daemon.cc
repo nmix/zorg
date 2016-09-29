@@ -9,6 +9,7 @@ MasterNodeDaemon::MasterNodeDaemon(uint addr) : NodeDaemon(addr)
 void MasterNodeDaemon::init()
 {
 	node = new MasterNode();
+	sleep(1);
 }
 
 void MasterNodeDaemon::finalize()

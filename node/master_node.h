@@ -7,7 +7,7 @@ class MasterNode : public Node
 {
 public:
 	MasterNode();
-	void check_messages();
+	bool check_messages();
 	bool send_to(uint, std::string);
 protected:
 

@@ -7,7 +7,7 @@ class SlaveNode : public Node
 {
 public:
 	SlaveNode(uint);
-	void check_messages();
+	bool check_messages();
 	bool send(std::string);
 
 private:

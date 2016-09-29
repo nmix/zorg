@@ -13,7 +13,7 @@ class Node
 
 public:
 	Node();
-	virtual void check_messages() = 0;
+	virtual bool check_messages() = 0;
 	virtual bool send_to(uint, std::string) {};
 	std::string recv();
 	bool has_messages();
