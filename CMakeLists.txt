@@ -18,3 +18,12 @@ add_subdirectory (dln)
 add_subdirectory (dln-ex)
 
 install(DIRECTORY include/ DESTINATION /usr/local/include/zorg FILES_MATCHING PATTERN "*.hpp")
+
+SET(CPACK_GENERATOR "DEB")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nik Mikhaylichenko <nn.mikh@yandex.ru>") #required
+ 
+INCLUDE(CPack)
+
+# To use this:
+# make package
+# sudo dpkg -i ZORG-0.1.1-Linux.deb
