@@ -6,9 +6,9 @@
 class MainDaemon : public MasterNodeDaemon
 {
 public:
-	MainDaemon();	
+	MainDaemon();
 private:
-	void process_message(std::string);
+	void process_message_from(uint, std::string);
 	// ---
 	void init();
 	void loop();

@@ -8,6 +8,12 @@
 // ---
 #include <queue> 
 
+struct Message
+{
+	uint addr;
+	std::string data;
+};
+
 class Node
 {
 
@@ -19,6 +25,7 @@ public:
 	bool has_messages();
 	uint awating_messages_count() { return ingoing_messages_queue.size(); }
 	std::string format_message(uint, std::string);
+	void format_message(Message&, std::string);
 
 protected:
 	zmq::context_t ctx;

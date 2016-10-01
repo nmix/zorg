@@ -28,7 +28,7 @@ bool SlaveNode::check_messages()
 
 bool SlaveNode::send(std::string message_data)
 {
-	outgoing_messages_queue.push(format_message(address, message_data));
+ 	outgoing_messages_queue.push(format_message(address, message_data));
 	check_messages();
 	return true;
 }

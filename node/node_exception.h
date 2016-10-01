@@ -5,6 +5,7 @@
 #include <string>
 
 #define NO_DATA_AVAILABLE		1
+#define BAD_MESSAGE_FORMAT		2
 
 
 class NodeException : public std::exception

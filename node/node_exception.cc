@@ -24,6 +24,9 @@ std::string NodeException::err_str(int code)
 	case NO_DATA_AVAILABLE:
 		msg = "No data available";
 		break;
+	case BAD_MESSAGE_FORMAT:
+		msg = "Bad message format";
+		break;
 	}
 	return msg;
 }

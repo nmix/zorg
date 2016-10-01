@@ -9,6 +9,7 @@ class MasterNodeDaemon : public NodeDaemon
 public:
 	MasterNodeDaemon(uint);
 protected:
+	virtual void process_message_from(uint, std::string) = 0;
 	void init();
 	void finalize();
 	bool send_to(uint, std::string);

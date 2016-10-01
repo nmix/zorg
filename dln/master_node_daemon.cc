@@ -24,7 +24,9 @@ void MasterNodeDaemon::check_messages()
 	{
 		std::string s = node->recv();
 		info(" msg in: " + s);
-		process_message(s);
+		Message message;
+		node->format_message(message, s);
+		process_message_from(message.addr, message.data);
 	}
 }
 

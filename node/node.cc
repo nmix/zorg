@@ -49,3 +49,11 @@ std::string Node::format_message(uint addr, std::string data)
 {
 	return std::to_string(addr) + "#" + data;
 }
+
+void Node::format_message(Message& message, std::string s)
+{
+	auto splitter_pos = s.find_first_of("#");
+	std::string addr_s = s.substr(0, splitter_pos);
+	message.addr = stoi(addr_s);
+	message.data = s.substr(splitter_pos + 1);
+}

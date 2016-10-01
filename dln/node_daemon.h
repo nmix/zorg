@@ -9,7 +9,6 @@ class NodeDaemon : public Daemon
 public:
 	NodeDaemon(int);
 protected:
-	virtual void process_message(std::string) = 0;
 	virtual void check_messages() = 0;
 private:
 };

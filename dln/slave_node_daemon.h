@@ -9,6 +9,7 @@ class SlaveNodeDaemon : public NodeDaemon
 public:
 	SlaveNodeDaemon(uint);
 protected:
+	virtual void process_message(std::string) = 0;
 	void init();
 	void finalize();
 	uint awating_messages_count() { return node->awating_messages_count(); }

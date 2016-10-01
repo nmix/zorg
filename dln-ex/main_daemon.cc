@@ -25,6 +25,6 @@ void MainDaemon::loop()
 	loop_counter += 1;
 }
 
-void MainDaemon::process_message(std::string message)
+void MainDaemon::process_message_from(uint, std::string)
 {
 }
