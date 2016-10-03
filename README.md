@@ -424,7 +424,7 @@ void MainDaemon::loop()
 	loop_counter += 1;
 }
 
-// переопределяем виртуальный абстрактный метод `process_message()` 
+// переопределяем виртуальный абстрактный метод `process_message_from()` 
 // родительского класса
 void MainDaemon::process_message_from(uint, std::string)
 {
