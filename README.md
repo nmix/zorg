@@ -54,6 +54,7 @@ make install
 ### Zorg
 
 ```bash
+cd /tmp
 git clone git@github.com:nmix/zorg.git
 cd zorg
 mkdir build
